@@ -29,7 +29,6 @@
 #include "KDReportsMainTable.h"
 #include "KDReportsTextDocReportLayout_p.h"
 #include "KDReportsSpreadsheetReportLayout_p.h"
-#include <QXmlInputSource>
 #include <QThread>
 #include <QProgressDialog>
 #include <QPainter>
@@ -44,6 +43,12 @@
 #include <QPointer>
 #include <QStyle>
 #include <QStyleOption>
+
+#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
+#include <QXmlInputSource>
+#else
+#include <QXmlStreamReader>
+#endif
 
 QT_BEGIN_NAMESPACE
 Q_GUI_EXPORT extern int qt_defaultDpi(); // This is what QTextDocument uses...
@@ -808,6 +813,7 @@ void KDReports::Report::setFooterLocation( HeaderLocations hl, Footer* footer )
     d->m_footers.insert( hl, footer);
 }
 
+#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
 bool KDReports::Report::loadFromXML( QIODevice* iodevice, ErrorDetails* details )
 {
     QDomDocument doc;
@@ -819,6 +825,9 @@ bool KDReports::Report::loadFromXML( QIODevice* iodevice, ErrorDetails* details 
     // elements in the rest of the document, watch out for that.
     if (iodevice->isOpen())
         iodevice->reset(); //need to do that to allow consecutive calls of loadFromXML()
+    else
+        iodevice->open(QIODevice::ReadOnly);
+
     QXmlInputSource source( iodevice );
     QXmlSimpleReader reader;
     reader.setFeature( QLatin1String( "http://xml.org/sax/features/namespaces" ), false );
@@ -840,6 +849,40 @@ bool KDReports::Report::loadFromXML( QIODevice* iodevice, ErrorDetails* details 
     }
     return loadFromXML( doc, details );
 }
+#else
+bool KDReports::Report::loadFromXML( QIODevice* iodevice, ErrorDetails* details )
+{
+    QDomDocument doc;
+    // Read document from the QIODevice, check for errors
+
+    // We need to be able to see the space in <text> </text>, this is why
+    // we activate the "report-whitespace-only-CharData" feature.
+    // Unfortunately this leads to lots of whitespace text nodes in between real
+    // elements in the rest of the document, watch out for that.
+    if (iodevice->isOpen())
+        iodevice->reset(); //need to do that to allow consecutive calls of loadFromXML()
+    else
+        iodevice->open(QIODevice::ReadOnly);
+
+    QXmlStreamReader reader( iodevice );
+    reader.setNamespaceProcessing( true );
+
+    QString errorMsg;
+    int errorLine = 0, errorColumn = 0;
+    bool ret = doc.setContent( &reader, true, &errorMsg, &errorLine, &errorColumn );
+    if( !ret ) {
+        if ( details ) {
+            details->setLine( errorLine );
+            details->setColumn( errorColumn );
+            details->setDriverMessage( errorMsg );
+        }
+        else
+            qWarning( "Malformed XML read in KDReports::Report::loadFromXML(): error message = %s, error line = %d, error column = %d", qPrintable( errorMsg ), errorLine, errorColumn );
+        return false;
+    }
+    return loadFromXML( doc, details );
+}
+#endif
 
 
 bool KDReports::Report::loadFromXML( const QDomDocument& doc, ErrorDetails* details)

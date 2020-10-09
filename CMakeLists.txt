@@ -99,6 +99,12 @@ if (KDChart_FOUND)
   endif()
 endif()
 
+find_package(KF5Prison QUIET)
+if(KF5Prison_FOUND)
+  message(STATUS "Enabling barcode support")
+  add_definitions(-DHAVE_KF5PRISON)
+endif()
+
 set(CMAKE_INCLUDE_CURRENT_DIR TRUE)
 set(CMAKE_AUTOMOC TRUE)
 

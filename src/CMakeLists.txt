@@ -30,6 +30,7 @@ ecm_generate_headers(kdreports_HEADERS
   HEADER_NAMES
     KDReportsReport
     KDReportsElement
+    KDReportsBarcodeElement
     KDReportsChartElement
     KDReportsTextElement
     KDReportsHtmlElement
@@ -65,6 +66,7 @@ install(FILES
   ${kdreports_HEADERS}
   KDReports/KDReportsReport.h
   KDReports/KDReportsElement.h
+  KDReports/KDReportsBarcodeElement.h
   KDReports/KDReportsChartElement.h
   KDReports/KDReportsTextElement.h
   KDReports/KDReportsHtmlElement.h
@@ -94,6 +96,7 @@ DESTINATION ${INSTALL_INCLUDE_DIR}/KDReports
 set(SOURCES
   KDReports/KDReportsReport.cpp
   KDReports/KDReportsElement.cpp
+  KDReports/KDReportsBarcodeElement.cpp
   KDReports/KDReportsChartElement.cpp
   KDReports/KDReportsTextElement.cpp
   KDReports/KDReportsHtmlElement.cpp
@@ -132,6 +135,9 @@ add_library(kdreports ${KDReports_LIBRARY_MODE} ${SOURCES} ${KDREPORTS_UI} ${KDR
 target_link_libraries(kdreports ${QT_LIBRARIES})
 if (KDChart_FOUND)
     target_link_libraries(kdreports KDChart::kdchart)
+endif()
+if (KF5Prison_FOUND)
+    target_link_libraries(kdreports KF5Prison)
 endif()
 set_target_properties(kdreports PROPERTIES DEFINE_SYMBOL KDREPORTS_BUILD_KDREPORTS_LIB)
 set_target_properties(kdreports PROPERTIES VERSION ${${PROJECT_NAME}_VERSION})

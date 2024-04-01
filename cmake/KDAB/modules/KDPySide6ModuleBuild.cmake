@@ -115,7 +115,6 @@ macro(
         PROPERTY INCLUDE_DIRECTORIES
     )
     make_path(python_dir_include_dirs ${raw_python_dir_include_dirs})
-    set(shiboken_include_dirs "${shiboken_include_dirs}${PATH_SEP}${python_dir_include_dirs}")
 
     set(shiboken_framework_include_dirs_option "")
     if(CMAKE_HOST_APPLE)
